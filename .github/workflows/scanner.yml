@@ -29,7 +29,10 @@ jobs:
 
     - name: Update & Merge Domain Lists
       run: |
-        git clone https://github.com/tb0hdan/domains.git
+        git clone --depth 1 https://github.com/tb0hdan/domains.git --no-checkout
+        git -C domains lfs install --skip-smudge
+        git -C domains checkout
+
         python merge_datas.py
 
     - name: Run Scanning Script
