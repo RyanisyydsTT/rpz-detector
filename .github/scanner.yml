@@ -1,0 +1,48 @@
+name: Monthly-Domain-RPZ-List
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: write
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.10"
+
+    - name: Install Dependencies
+      run: |
+        pip install -r requirements.txt
+
+    - name: Update & Merge Domain Lists
+      run: |
+        git clone https://github.com/tb0hdan/domains.git
+        python merge_datas.py
+
+    - name: Run Scanning Script
+      run: |
+        python main.py
+
+    - name: Uploading Scanned Domain List
+      run: |
+        mkdir -p repo/Monthly-Scans
+        DATE=$(date -u +"%Y-%m-%d-%H-%M-%S")
+        mv matching_domains.txt repo/Monthly-Scans/"${DATE}_GMT+8.txt"
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add repo/Monthly-Scans
+        git commit -m "Add matched domain list for ${DATE}_GMT+8"
+        git push
+      if: success()
